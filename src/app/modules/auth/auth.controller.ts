@@ -60,6 +60,7 @@ const refreshToken = catchAsync(async (req, res) => {
 // change password controller
 const changePassword = catchAsync(async (req, res) => {
   const { ...passwordData } = req.body;
+  // console.log("🚀 ~ changePassword ~ passwordData:", passwordData)
   const result = await AuthServices.changePassword(req.user, passwordData);
   sendResponse(res, {
     statusCode: httpStatus.OK,
@@ -103,10 +104,25 @@ const resetPassword = catchAsync(async (req, res) => {
   });
 });
 
+// Check authentication
+const checkAuth = catchAsync(async (req, res) => {
+  const result = await AuthServices.checkAuthentication(
+    req.cookies?.token || req.headers.authorization?.split(" ")[1],
+  );
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Authenticated successfully.",
+    data: result,
+  });
+});
+
 export const AuthControllers = {
   loginUser,
   changePassword,
   refreshToken,
   forgotPassword,
   resetPassword,
+  checkAuth,
 };

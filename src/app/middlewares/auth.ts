@@ -6,9 +6,12 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 import { TUserRole } from "../modules/user/user.interface";
 import { User } from "../modules/user/user.model";
+import { ObjectId } from "bson";
 
 const auth = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+    // console.log("Received Authorization Header:", req.headers.authorization);
+
     const token = req.headers.authorization;
     // console.log("hit token", token);
     // if token not provided
@@ -24,12 +27,17 @@ const auth = (...requiredRoles: TUserRole[]) => {
       token,
       config.jwt_access_secret as string,
     ) as JwtPayload;
+    // console.log("🚀 ~ returncatchAsync ~ decoded:", decoded);
 
-    // Use "iat" (issued at later if needed)
     const { userId, role } = decoded;
+    // console.log("🚀 ~ returncatchAsync ~ userId:", userId);
+    // console.log("🚀 ~ returncatchAsync ~ role:", role);
+
+    const transformedUserId = new ObjectId(userId);
 
     // check: does the user exist
-    const user = await User.findById(userId);
+    const user = await User.findById(transformedUserId);
+    // console.log("🚀 ~ returncatchAsync ~ user:", user)
     if (!user) {
       throw new AppError(httpStatus.NOT_FOUND, "User does not exist.");
     }
@@ -45,23 +53,6 @@ const auth = (...requiredRoles: TUserRole[]) => {
     if (userStatus === "blocked") {
       throw new AppError(httpStatus.FORBIDDEN, "The user has been blocked.");
     }
-
-    // TODO: check isJWTIsIssuedBeforeChangingPassword
-    // check: isJWTIssuedAtBeforeChangingPassword
-    // if (user?.passwordChangedAt) {
-    //   const isJWTIssuedAtBeforeChangingPassword =
-    //     await User.isJWTIssuedAtBeforeChangingPassword(
-    //       iat as number,
-    //       user.passwordChangedAt,
-    //     );
-
-    //   if (isJWTIssuedAtBeforeChangingPassword) {
-    //     throw new AppError(
-    //       httpStatus.UNAUTHORIZED,
-    //       "You are not authorized to access!",
-    //     );
-    //   }
-    // }
 
     // check if the user role is allowed
     if (requiredRoles && !requiredRoles.includes(role)) {

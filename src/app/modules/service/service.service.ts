@@ -7,7 +7,7 @@ const createService = async (payload: TService) => {
 };
 
 const getAllServices = async () => {
-  const result = await Service.find();
+  const result = await Service.find().sort({ updatedAt: -1 });
   return result;
 };
 
@@ -25,11 +25,7 @@ const updateService = async (id: string, payload: Partial<TService>) => {
 };
 
 const deleteService = async (id: string) => {
-  const result = await Service.findByIdAndUpdate(
-    id,
-    { isDeleted: true },
-    { new: true, runValidators: true }
-  );
+  const result = await Service.findByIdAndDelete(id);
   return result;
 };
 

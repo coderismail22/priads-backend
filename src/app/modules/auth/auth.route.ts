@@ -23,7 +23,7 @@ router.post(
 // Change Password
 router.post(
   "/change-password",
-  auth(USER_ROLE.admin, USER_ROLE.student),
+  auth(USER_ROLE.admin), //TODO: Add auth middleware
   validateRequest(AuthValidations.changePasswordValidationSchema),
   AuthControllers.changePassword,
 );
@@ -41,5 +41,7 @@ router.post(
   validateRequest(AuthValidations.resetPasswordValidationSchema),
   AuthControllers.resetPassword,
 );
+
+router.post("/check-auth", AuthControllers.checkAuth);
 
 export const AuthRoutes = router;

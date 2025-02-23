@@ -8,14 +8,14 @@ const router = express.Router();
 router.post(
   "/",
   validateRequest(ServiceValidations.createServiceValidationSchema),
-  ServiceControllers.createService
+  ServiceControllers.createService,
 );
 router.get("/", ServiceControllers.getAllServices);
 router.get("/:id", ServiceControllers.getService);
 router.patch(
   "/:id",
   validateRequest(ServiceValidations.updateServiceValidationSchema),
-  ServiceControllers.updateService
+  ServiceControllers.updateService,
 );
 router.delete("/:id", ServiceControllers.deleteService);
 

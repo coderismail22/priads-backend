@@ -21,6 +21,7 @@ const superAdminUserData: TAdmin = {
   password: config.super_admin_password as string,
   role: USER_ROLE.superAdmin,
   status: "in-progress",
+  isVerified: true,
   phone: "",
   isDeleted: false,
 };

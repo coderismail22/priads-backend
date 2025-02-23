@@ -3,6 +3,7 @@ import { z } from "zod";
 const createServiceValidationSchema = z.object({
   body: z.object({
     title: z.string().trim().min(1, "Title is required"),
+    description: z.string().trim().optional(),
     author: z.string().trim().min(1, "Author is required"),
     image: z.string().url("Image must be a valid URL"),
     body: z.string().min(1, "Body is required"),
@@ -15,6 +16,7 @@ const createServiceValidationSchema = z.object({
 const updateServiceValidationSchema = z.object({
   body: z.object({
     title: z.string().trim().min(1, "Title is required").optional(),
+    description: z.string().trim().optional(),
     author: z.string().trim().min(1, "Author is required").optional(),
     image: z.string().url("Image must be a valid URL").optional(),
     body: z.string().min(1, "Body is required").optional(),

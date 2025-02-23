@@ -8,7 +8,12 @@ import config from "../../config";
 import { createToken } from "./auth.utils";
 import sendEmail from "../../utils/sendEmail";
 import { generateOTP, sendVerificationEmail } from "../user/user.util";
-
+import { Admin } from "../admin/admin.model";
+import mongoose from "mongoose";
+type ChangePasswordPayload = {
+  newPassword: string;
+  oldPassword: string;
+};
 // login
 const loginUser = async (payload: TLoginUser) => {
   // 1. Check if the user exist
@@ -150,56 +155,65 @@ const refreshToken = async (token: string) => {
 //change password
 const changePassword = async (
   userData: JwtPayload,
-  payload: { newPassword: string; oldPassword: string },
+  payload: ChangePasswordPayload,
 ) => {
-  // check: does the user exist
-  const user = await User.doesUserExistByCustomId(userData?.userId);
-  if (!user) {
-    throw new AppError(httpStatus.NOT_FOUND, "User does not exist.");
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Find user by ID
+    const user = await User.findById(userData?.userId)
+      .select("+password")
+      .session(session);
+    if (!user) {
+      throw new AppError(httpStatus.NOT_FOUND, "User does not exist.");
+    }
+
+    // Check if user is deleted
+    if (user.isDeleted) {
+      throw new AppError(httpStatus.NOT_FOUND, "The user has been deleted.");
+    }
+
+    // Check if user is blocked
+    if (user.status === "blocked") {
+      throw new AppError(httpStatus.FORBIDDEN, "The user has been blocked.");
+    }
+
+    // Verify old password
+    if (payload.oldPassword !== user.password) {
+      throw new AppError(httpStatus.FORBIDDEN, "Old password is incorrect.");
+    }
+
+    // Update Admin password if applicable
+    await Admin.updateOne(
+      { email: userData?.email },
+      { password: payload.newPassword },
+    ).session(session);
+
+    // Update User password
+    await User.updateOne(
+      { _id: userData?.userId, role: userData?.role },
+      {
+        password: payload.newPassword,
+        needsPasswordChange: false,
+        passwordChangedAt: new Date(),
+      },
+    ).session(session);
+
+    // Commit transaction
+    await session.commitTransaction();
+    session.endSession();
+
+    return { message: "Password changed successfully." };
+  } catch (error) {
+    // Rollback transaction on error
+    await session.abortTransaction();
+    session.endSession();
+    throw new AppError(
+      httpStatus.INTERNAL_SERVER_ERROR,
+      "Password update failed.",
+    );
   }
-
-  // check: is the user deleted
-  const isUserDeleted = user?.isDeleted;
-  if (isUserDeleted) {
-    throw new AppError(httpStatus.NOT_FOUND, "The user has been deleted.");
-  }
-
-  // check: userStatus
-  const userStatus = user?.status;
-  if (userStatus === "blocked") {
-    throw new AppError(httpStatus.FORBIDDEN, "The user has been blocked.");
-  }
-
-  // check: doesPasswordMatch
-  const doesPasswordMatch = await User.doPasswordsMatch(
-    payload?.oldPassword,
-    user?.password,
-  );
-
-  if (!doesPasswordMatch) {
-    throw new AppError(httpStatus.FORBIDDEN, "Passwords is incorrect.");
-  }
-
-  // Password hashing before saving
-  const newHashedPassword = await bcrypt.hash(
-    payload?.newPassword,
-    Number(config.bcrypt_salt_rounds),
-  );
-
-  // Finally Update Password Into DB
-  const result = await User.findOneAndUpdate(
-    {
-      id: userData?.userId,
-      role: userData?.role,
-    },
-    {
-      password: newHashedPassword,
-      needsPasswordChange: false,
-      passwordChangedAt: new Date(),
-    },
-  );
-
-  return result;
 };
 
 // forgot password
@@ -297,10 +311,20 @@ const resetPassword = async (
 
   return result;
 };
+
+const checkAuthentication = (token: string) => {
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const decoded = jwt.verify(token, config.jwt_access_secret as string);
+  return decoded;
+};
 export const AuthServices = {
   loginUser,
   changePassword,
   refreshToken,
   forgotPassword,
   resetPassword,
+  checkAuthentication,
 };

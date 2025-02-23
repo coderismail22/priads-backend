@@ -47,25 +47,6 @@ const userSchema = new Schema<IUser>(
   },
 );
 
-// userSchema.pre("save", async function (next) {
-//   // eslint-disable-next-line @typescript-eslint/no-this-alias
-//   const user = this; // doc
-//   // hashing password and save into DB
-//   user.password = await bcrypt.hash(
-//     user.password,
-//     Number(config.bcrypt_salt_rounds),
-//   );
-//   next();
-// });
-
-// set '' after saving password
-// userSchema.post("save", function (doc, next) {
-//   doc.password = "";
-//   next();
-// });
-
-// statics 👇
-// doesUserExistByCustomId
 userSchema.statics.doesUserExistByCustomId = async function (id: string) {
   return await User.findOne({ id }).select("+password"); // find with custom id +  explicit selection
 };
@@ -77,27 +58,5 @@ userSchema.statics.doPasswordsMatch = async function (
 ) {
   return bcrypt.compare(plaintextPassword, hashedPassword);
 };
-
-// isUserDeleted
-// userSchema.statics.isUserDeleted = async function (id: string) {
-//   return;
-// };
-
-// TODO: isJWTIssuedAtBeforeChangingPassword 👇
-// userSchema.statics.isJWTIssuedAtBeforeChangingPassword = async function (
-//   jwtIssuedAtTimeStamp: string,
-//   passwordChangedAtTimeStamp: Date,
-// ) {
-//   //covert date(passwordChangedAtTimeStamp) to milliseconds
-
-//   const convertedPasswordChangedAtTimeStamp =
-//     new Date(passwordChangedAtTimeStamp).getTime() / 1000;
-
-//   const convertedJwtIssuedAtTimeStamp = parseInt(jwtIssuedAtTimeStamp);
-
-//   const isJWTIssuedAtBeforeChangingPassword =
-//     convertedJwtIssuedAtTimeStamp < convertedPasswordChangedAtTimeStamp;
-//   return isJWTIssuedAtBeforeChangingPassword;
-// };
 
 export const User = model<IUser, UserModel>("User", userSchema);
