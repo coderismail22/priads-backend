@@ -27,7 +27,7 @@ app.use(
 
 // application routes
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).json({ message: "Welcome to lms server " });
+  res.status(200).json({ message: "Welcome to bmfbad server " });
 });
 
 app.use("/api/v1", router);

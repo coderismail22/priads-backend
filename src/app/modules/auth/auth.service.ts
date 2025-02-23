@@ -1,13 +1,11 @@
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import { User } from "../user/user.model";
-import bcrypt from "bcrypt";
 import { TLoginUser } from "./auth.interface";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../../config";
 import { createToken } from "./auth.utils";
 import sendEmail from "../../utils/sendEmail";
-import { generateOTP, sendVerificationEmail } from "../user/user.util";
 import { Admin } from "../admin/admin.model";
 import mongoose from "mongoose";
 type ChangePasswordPayload = {
@@ -38,24 +36,6 @@ const loginUser = async (payload: TLoginUser) => {
   const isPasswordValid = payload?.password === user?.password;
   if (!isPasswordValid) {
     throw new AppError(httpStatus.FORBIDDEN, "Password is incorrect.");
-  }
-
-  // 5.If the user is not verified, generate OTP and send via email
-  const otp = generateOTP();
-  const otpExpiry = new Date();
-  otpExpiry.setMinutes(otpExpiry.getMinutes() + 5); // OTP valid for 5 mins
-
-  if (!user.isVerified) {
-    // update user user otp related fields
-    user.verificationCode = otp;
-    user.otpExpiresAt = otpExpiry;
-    user.lastOtpSentAt = new Date();
-    await sendVerificationEmail(user.email, otp);
-    // ✅ Return state indicating user needs to verify first
-    return {
-      isVerified: false,
-      message: "User not verified. OTP sent to the registered email.",
-    };
   }
 
   // ✅ 6. If verified, generate tokens

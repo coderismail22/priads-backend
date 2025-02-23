@@ -7,7 +7,7 @@ const createService = async (payload: TService) => {
 };
 
 const getAllServices = async () => {
-  const result = await Service.find().sort({ updatedAt: -1 });
+  const result = await Service.find();
   return result;
 };
 

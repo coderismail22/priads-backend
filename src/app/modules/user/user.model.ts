@@ -1,7 +1,6 @@
-import bcrypt from "bcrypt";
 import { Schema, model } from "mongoose";
 // import config from "../../config";
-import { IUser, UserModel } from "./user.interface";
+import { IUser } from "./user.interface";
 import { STATUS } from "./user.constant";
 const userSchema = new Schema<IUser>(
   {
@@ -33,10 +32,6 @@ const userSchema = new Schema<IUser>(
       default: "in-progress",
     },
     // OTP
-    verificationCode: String,
-    otpExpiresAt: Date,
-    lastOtpSentAt: Date, // To handle resend delay
-    isVerified: { type: Boolean, default: false },
     isDeleted: {
       type: Boolean,
       default: false,
@@ -47,16 +42,4 @@ const userSchema = new Schema<IUser>(
   },
 );
 
-userSchema.statics.doesUserExistByCustomId = async function (id: string) {
-  return await User.findOne({ id }).select("+password"); // find with custom id +  explicit selection
-};
-
-// doPasswordsMatch
-userSchema.statics.doPasswordsMatch = async function (
-  plaintextPassword,
-  hashedPassword,
-) {
-  return bcrypt.compare(plaintextPassword, hashedPassword);
-};
-
-export const User = model<IUser, UserModel>("User", userSchema);
+export const User = model<IUser>("User", userSchema);
