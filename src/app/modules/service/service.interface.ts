@@ -7,4 +7,5 @@ export type TService = {
   comments: string[];
   category: string[];
   isDeleted: boolean;
+  slug: string; 
 };

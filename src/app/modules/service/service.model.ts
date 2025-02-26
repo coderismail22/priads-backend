@@ -10,6 +10,7 @@ const serviceSchema = new Schema<TService>(
     body: { type: String, required: true },
     category: { type: [String], default: [] },
     comments: { type: [String], default: [] },
+    slug: { type: String, unique: true, required: true },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true },

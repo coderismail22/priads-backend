@@ -23,8 +23,8 @@ const getAllServices = catchAsync(async (req, res) => {
 });
 
 const getService = catchAsync(async (req, res) => {
-  const { id } = req.params;
-  const result = await ServiceServices.getService(id);
+  const { slug } = req.params;
+  const result = await ServiceServices.getService(slug);
   sendResponse(res, {
     success: true,
     statusCode: 200,

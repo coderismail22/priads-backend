@@ -11,7 +11,7 @@ router.post(
   ServiceControllers.createService,
 );
 router.get("/", ServiceControllers.getAllServices);
-router.get("/:id", ServiceControllers.getService);
+router.get("/:slug", ServiceControllers.getService);
 router.patch(
   "/:id",
   validateRequest(ServiceValidations.updateServiceValidationSchema),
