@@ -18,8 +18,9 @@ app.use(
   cors({
     origin: [
       "https://fab-ads-demo.netlify.app",
-      "http://www.bmfbad.com",
       "https://www.bmfbad.com",
+      "https://bmfbad.com",
+      "http://www.bmfbad.com",
       "http://localhost:5173",
       "http://localhost:5174",
     ],
